@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Swarm</title>
+</head>
+<body>
+    <h1>Agent Swarm</h1>
+    <p>Health: <span id="health">checking...</span></p>
+
+    <script>
+        fetch('/health')
+            .then(res => res.text())
+            .then(text => document.getElementById('health').textContent = text)
+            .catch(() => document.getElementById('health').textContent = 'error');
+    </script>
+</body>
+</html>
