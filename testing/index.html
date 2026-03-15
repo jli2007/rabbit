@@ -13,9 +13,7 @@
     <p id="result">Ready.</p>
 
     <script>
-        const apiBase = window.location.protocol === 'file:'
-            ? 'http://localhost:8080'
-            : window.location.origin;
+        const apiBase = 'http://localhost:8080'
 
         const healthEl = document.getElementById('health');
         const resultEl = document.getElementById('result');

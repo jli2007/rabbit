@@ -2,6 +2,7 @@ use axum::{Json, Router, routing::{get, post}};
 use lapin::{options::*, types::FieldTable, BasicProperties, Connection, ConnectionProperties, ExchangeKind};
 use serde::Deserialize;
 use std::sync::Arc;
+use tower_http::cors::{Any, CorsLayer};
 
 const EXCHANGE_NAME: &str = "test_event";
 const ROUTING_KEY: &str = "test_key";
@@ -56,9 +57,15 @@ async fn main() {
 
     let channel = Arc::new(channel);
 
+    let cors = CorsLayer::new()
+        .allow_origin(Any)
+        .allow_methods(Any)
+        .allow_headers(Any);
+
     let app = Router::new()
         .route("/health", get(health))
         .route("/webhook", post(webhook))
+        .layer(cors)
         .with_state(channel);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();

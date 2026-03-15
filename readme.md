@@ -1,11 +1,11 @@
-use uv for python microservices
+use uv for python services
 
 uv add PACKAGE
 
 uv run python src/main.py
 
-testing/
+uses cargo for rust services
 
-is an html testing file
+cargo add PACKAGE
 
-will make a dashboard with react in the future but no frontend for now
+testing/ is an html testing file

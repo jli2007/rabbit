@@ -4,6 +4,7 @@ __pycache__
 *.pyc
 .python-version
 uv.lock
+*.egg-info
 
 # Rust
 target
@@ -23,3 +24,4 @@ build
 # Env
 .env
 .env.local
+.env.production

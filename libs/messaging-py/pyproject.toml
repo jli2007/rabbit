@@ -1,12 +1,10 @@
 [project]
-name = "classifier"
+name = "messaging"
 version = "0.1.0"
 description = "Add your description here"
+readme = "readme.md"
 requires-python = ">=3.13"
 dependencies = [
-    "messaging",
-    "pydantic>=2.0",
+    "aio-pika>=9.6.1",
+    "dotenv>=0.9.9",
 ]
-
-[tool.uv.sources]
-  messaging = { workspace = true }
