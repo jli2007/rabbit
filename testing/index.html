@@ -8,12 +8,50 @@
 <body>
     <h1>Agent Swarm</h1>
     <p>Health: <span id="health">checking...</span></p>
+    <input id="message" type="text" value="hello">
+    <button id="publish">Publish</button>
+    <p id="result">Ready.</p>
 
     <script>
-        fetch('/health')
+        const apiBase = window.location.protocol === 'file:'
+            ? 'http://localhost:8080'
+            : window.location.origin;
+
+        const healthEl = document.getElementById('health');
+        const resultEl = document.getElementById('result');
+        const messageEl = document.getElementById('message');
+        const publishButton = document.getElementById('publish');
+
+        fetch(`${apiBase}/health`)
             .then(res => res.text())
-            .then(text => document.getElementById('health').textContent = text)
-            .catch(() => document.getElementById('health').textContent = 'error');
+            .then(text => healthEl.textContent = text)
+            .catch(() => healthEl.textContent = 'error');
+
+        publishButton.addEventListener('click', async () => {
+            const body = messageEl.value.trim();
+
+            if (!body) {
+                resultEl.textContent = 'Enter a message first.';
+                return;
+            }
+
+            resultEl.textContent = 'Publishing...';
+
+            try {
+                const response = await fetch(`${apiBase}/webhook`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ body }),
+                });
+
+                const text = await response.text();
+                resultEl.textContent = `Status: ${response.status}\nResponse: ${text}\nSent: ${body}`;
+            } catch (error) {
+                resultEl.textContent = `Request failed: ${error.message}`;
+            }
+        });
     </script>
 </body>
 </html>
