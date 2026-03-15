@@ -1,0 +1,25 @@
+# Python
+.venv
+__pycache__
+*.pyc
+.python-version
+uv.lock
+
+# Rust
+target
+Cargo.lock
+
+# React/Node
+node_modules
+dist
+build
+.next
+
+# IDE
+.idea
+.vscode
+*.swp
+
+# Env
+.env
+.env.local
