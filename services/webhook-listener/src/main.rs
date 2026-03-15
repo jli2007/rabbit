@@ -1,11 +1,19 @@
-use axum::{Json, Router, routing::{get, post}};
+mod config;
+
+use axum::{extract::State, routing::{get, post}, Json, Router};
 use lapin::{options::*, types::FieldTable, BasicProperties, Connection, ConnectionProperties, ExchangeKind};
 use serde::Deserialize;
 use std::sync::Arc;
 use tower_http::cors::{Any, CorsLayer};
 
-const EXCHANGE_NAME: &str = "test_event";
-const ROUTING_KEY: &str = "test_key";
+const ROUTING_KEY: &str = "issue.classify";
+
+#[derive(Clone)]
+struct AppState {
+    channel: Arc<lapin::Channel>,
+    exchange_name: String,
+    routing_key: String,
+}
 
 #[derive(Deserialize)]
 struct WebhookPayload {
@@ -18,14 +26,14 @@ async fn health() -> &'static str {
 
 // publishes message to rabbit
 async fn webhook(
-    axum::extract::State(channel):
-    axum::extract::State<Arc<lapin::Channel>>, 
+    State(state): State<AppState>,
     Json(payload): Json<WebhookPayload>,
 ) -> &'static str {
-    channel
+    state
+        .channel
         .basic_publish(
-            EXCHANGE_NAME.into(),
-            ROUTING_KEY.into(),
+            state.exchange_name.as_str().into(),
+            state.routing_key.as_str().into(),
             BasicPublishOptions::default(),
             payload.body.as_bytes(),
             BasicProperties::default(),
@@ -39,6 +47,7 @@ async fn webhook(
 
 #[tokio::main]
 async fn main() {
+    let cfg = config::load();
     let conn = Connection::connect("amqp://guest:guest@localhost:5672", ConnectionProperties::default())
           .await
           .unwrap();
@@ -47,7 +56,7 @@ async fn main() {
 
     channel
         .exchange_declare(
-            EXCHANGE_NAME.into(),
+            cfg.rabbitmq_exchange.as_str().into(),
             ExchangeKind::Topic,
             ExchangeDeclareOptions { durable: true, ..Default::default() },
             FieldTable::default(),
@@ -55,7 +64,11 @@ async fn main() {
         .await
         .unwrap();
 
-    let channel = Arc::new(channel);
+    let state = AppState {
+        channel: Arc::new(channel),
+        exchange_name: cfg.rabbitmq_exchange,
+        routing_key: ROUTING_KEY.to_string(),
+    };
 
     let cors = CorsLayer::new()
         .allow_origin(Any)
@@ -66,7 +79,7 @@ async fn main() {
         .route("/health", get(health))
         .route("/webhook", post(webhook))
         .layer(cors)
-        .with_state(channel);
+        .with_state(state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
     println!("listening on http://0.0.0.0:8080");
